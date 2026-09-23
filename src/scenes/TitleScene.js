@@ -68,7 +68,7 @@ export default class TitleScene extends Phaser.Scene {
     });
 
     this.add
-      .text(width / 2, height * 0.94, 'protótipo · placeholders de arte', {
+      .text(width / 2, height * 0.94, 'protótipo · arte em produção', {
         fontFamily: 'sans-serif',
         fontSize: '11px',
         color: '#6d5f6b',
@@ -76,7 +76,7 @@ export default class TitleScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     this.input.once('pointerdown', () => {
-      this.scene.start('Chapter3');
+      this.scene.start('Prologue');
     });
   }
 }

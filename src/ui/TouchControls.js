@@ -4,9 +4,10 @@ import Phaser from 'phaser';
 // advance dialogue). Works with touch and mouse, and mirrors the arrow
 // keys / space bar so desktop testing works too.
 export default class TouchControls {
-  constructor(scene) {
+  constructor(scene, { showMovement = true } = {}) {
     this.scene = scene;
     this.state = { up: false, down: false, left: false, right: false };
+    this.movementEnabled = showMovement;
 
     const { width, height } = scene.scale;
     const depth = 1000;
@@ -19,6 +20,7 @@ export default class TouchControls {
     this.buttons.down = this.addButton('dpad_down', originX, originY + pad, depth, 'down');
     this.buttons.left = this.addButton('dpad_left', originX - pad, originY, depth, 'left');
     this.buttons.right = this.addButton('dpad_right', originX + pad, originY, depth, 'right');
+    if (!showMovement) this.setMovementEnabled(false);
 
     this.actionButton = scene.add
       .image(width - 70, height - 96, 'action_btn')
@@ -90,8 +92,12 @@ export default class TouchControls {
     return { up, down, left, right, action };
   }
 
+  // `visible` gates the action button outright, and gates the d-pad only
+  // together with the current setMovementEnabled() state — so a scene that
+  // was built with showMovement:false (pure dialogue chapters) never has
+  // its d-pad flash back into view just because setVisible(true) ran.
   setVisible(visible) {
-    Object.values(this.buttons).forEach((b) => b.setVisible(visible));
+    Object.values(this.buttons).forEach((b) => b.setVisible(visible && this.movementEnabled));
     this.actionButton.setVisible(visible);
   }
 
@@ -100,6 +106,7 @@ export default class TouchControls {
   // intercepting pointer events (not just hide) or taps land on the wrong
   // thing. The action button stays live since it also advances dialogue.
   setMovementEnabled(enabled) {
+    this.movementEnabled = enabled;
     Object.values(this.buttons).forEach((b) => {
       b.setVisible(enabled);
       if (enabled) b.setInteractive();

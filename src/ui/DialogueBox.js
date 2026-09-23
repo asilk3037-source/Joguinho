@@ -1,10 +1,14 @@
 import Phaser from 'phaser';
 
 const SPEAKER_META = {
-  line: { name: 'Line', color: 0x2b2b3d, letter: 'L' },
-  bell: { name: 'Bell', color: 0xd98a8a, letter: 'B' },
-  narrator: { name: '', color: 0x4a3f47, letter: '' },
+  line: { name: 'Line', color: 0x2b2b3d, portraitTexture: 'line_portraits' },
+  bell: { name: 'Bell', color: 0xd98a8a, portraitTexture: 'bell_portraits' },
+  narrator: { name: '', color: 0x4a3f47, portraitTexture: null },
 };
+
+// Frame order in both line_portraits.png and bell_portraits.png (same 3x2
+// grid layout — see BootScene.js preload comment).
+const EXPRESSION_FRAMES = { neutral: 0, smile: 1, laugh: 2, surprised: 3, blush: 4, nervous: 5 };
 
 // Bottom dialogue box: speaker portrait + name + text, advanced by tapping
 // the action button. Steps of type "choice" pause and wait for one of the
@@ -34,11 +38,12 @@ export default class DialogueBox {
       .circle(46, boxY + 34, 22, 0x2b2b3d)
       .setScrollFactor(0)
       .setDepth(depth);
-    this.portraitLetter = scene.add
-      .text(46, boxY + 34, '', { fontFamily: 'sans-serif', fontSize: '20px', color: '#ffffff' })
-      .setOrigin(0.5)
+    this.portraitImage = scene.add
+      .image(46, boxY + 34, 'line_portraits', 0)
+      .setDisplaySize(40, 40)
       .setScrollFactor(0)
-      .setDepth(depth);
+      .setDepth(depth + 1)
+      .setVisible(false);
     this.nameText = scene.add
       .text(78, boxY + 16, '', {
         fontFamily: 'sans-serif',
@@ -68,7 +73,7 @@ export default class DialogueBox {
       .setScrollFactor(0)
       .setDepth(depth);
 
-    this.pieces = [this.bg, this.portrait, this.portraitLetter, this.nameText, this.bodyText, this.hintText];
+    this.pieces = [this.bg, this.portrait, this.portraitImage, this.nameText, this.bodyText, this.hintText];
     this.setPiecesVisible(false);
 
     this.choiceButtons = [];
@@ -121,15 +126,21 @@ export default class DialogueBox {
     }
 
     const meta = SPEAKER_META[step.speaker] || SPEAKER_META.narrator;
-    this.applySpeaker(meta);
+    this.applySpeaker(meta, step.expression);
     this.bodyText.setText(step.text);
     this.hintText.setText('toque A');
   }
 
-  applySpeaker(meta) {
+  applySpeaker(meta, expression) {
     this.portrait.setFillStyle(meta.color);
-    this.portraitLetter.setText(meta.letter);
     this.nameText.setText(meta.name);
+
+    if (meta.portraitTexture) {
+      const frame = EXPRESSION_FRAMES[expression] ?? EXPRESSION_FRAMES.neutral;
+      this.portraitImage.setTexture(meta.portraitTexture, frame).setVisible(true);
+    } else {
+      this.portraitImage.setVisible(false);
+    }
   }
 
   showChoices(options) {
@@ -157,8 +168,8 @@ export default class DialogueBox {
   resolveChoice(option) {
     this.clearChoices();
     this.waitingForChoice = false;
-    const meta = SPEAKER_META.bell;
-    this.applySpeaker(meta);
+    const meta = SPEAKER_META[option.speaker || 'bell'];
+    this.applySpeaker(meta, option.expression);
     this.bodyText.setText(option.reply);
     this.hintText.setText('toque A');
   }

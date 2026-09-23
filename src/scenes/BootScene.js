@@ -1,16 +1,43 @@
 import Phaser from 'phaser';
 
-// Generates every placeholder texture the prototype needs, so no art files
-// are required yet. Swap these for real spritesheets later (see
-// ART_BRIEFS.md) without touching any other scene.
+// Generates every placeholder texture the prototype still needs, and loads
+// the real art that has arrived so far (see ART_BRIEFS.md for what's still
+// missing). Swapping in more real art later only touches this file plus
+// whichever scene references the new texture key.
 export default class BootScene extends Phaser.Scene {
   constructor() {
     super('Boot');
   }
 
+  preload() {
+    // Real character walk cycles: 4x4 grid, 64x64 per frame.
+    // Row order (frame index): 0-3 down, 4-7 right, 8-11 left, 12-15 up.
+    this.load.spritesheet('line_sheet', 'assets/characters/line_walk.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+    this.load.spritesheet('bell_sheet', 'assets/characters/bell_walk.png', {
+      frameWidth: 64,
+      frameHeight: 64,
+    });
+
+    // Real dialogue portraits for both, matching art style: 3x2 grid,
+    // 128x128 per frame. Frame order: neutral, smile, laugh, surprised,
+    // blush, nervous (see DialogueBox.js EXPRESSION_FRAMES).
+    this.load.spritesheet('line_portraits', 'assets/portraits/line_portraits.png', {
+      frameWidth: 128,
+      frameHeight: 128,
+    });
+    this.load.spritesheet('bell_portraits', 'assets/portraits/bell_portraits.png', {
+      frameWidth: 128,
+      frameHeight: 128,
+    });
+  }
+
   create() {
-    this.makeCharacterTextures('line', 0x2b2b3d, 0xe8c07d);
-    this.makeCharacterTextures('bell', 0xd98a8a, 0x3a2a3d);
+    this.createWalkAnims('line');
+    this.createWalkAnims('bell');
+
     this.makeFloorTile();
     this.makeTable();
     this.makeDirButton('dpad_up', 'up');
@@ -19,39 +46,31 @@ export default class BootScene extends Phaser.Scene {
     this.makeDirButton('dpad_right', 'right');
     this.makeActionButton();
     this.makeHeart();
+    this.makeJersey('bell_cruzeiro', 0x1a4fa0);
+    this.makeJersey('bell_galo', 0x161616);
+    this.makeNightFloorTile();
+    this.makeStar();
+    this.makeLandmarkMarker();
 
     this.scene.start('Title');
   }
 
-  makeCharacterTextures(key, bodyColor, accentColor) {
-    const dirs = ['down', 'up', 'left', 'right'];
-    dirs.forEach((dir) => {
-      const g = this.add.graphics();
-      g.fillStyle(bodyColor, 1);
-      g.fillRoundedRect(4, 4, 24, 24, 6);
-      g.lineStyle(2, 0x000000, 0.35);
-      g.strokeRoundedRect(4, 4, 24, 24, 6);
-
-      // glasses hint for Bell, always visible near the top of the sprite
-      if (key === 'bell') {
-        g.fillStyle(0xffffff, 0.9);
-        g.fillRect(10, 9, 5, 3);
-        g.fillRect(17, 9, 5, 3);
-      }
-
-      // facing indicator so the placeholder still reads as directional
-      g.fillStyle(accentColor, 1);
-      const marks = {
-        down: [13, 22, 6, 4],
-        up: [13, 6, 6, 4],
-        left: [6, 13, 4, 6],
-        right: [22, 13, 4, 6],
-      };
-      const [mx, my, mw, mh] = marks[dir];
-      g.fillRect(mx, my, mw, mh);
-
-      g.generateTexture(`${key}_${dir}`, 32, 32);
-      g.destroy();
+  // Frame ranges follow the fixed 4x4 grid described in preload() above.
+  createWalkAnims(key) {
+    const sheet = `${key}_sheet`;
+    const dirs = {
+      down: [0, 1, 2, 3],
+      right: [4, 5, 6, 7],
+      left: [8, 9, 10, 11],
+      up: [12, 13, 14, 15],
+    };
+    Object.entries(dirs).forEach(([dir, frames]) => {
+      this.anims.create({
+        key: `${key}_walk_${dir}`,
+        frames: this.anims.generateFrameNumbers(sheet, { frames }),
+        frameRate: 8,
+        repeat: -1,
+      });
     });
   }
 
@@ -128,5 +147,63 @@ export default class BootScene extends Phaser.Scene {
     g.fillTriangle(2, 12, 26, 12, 14, 26);
     g.generateTexture('heart', 28, 28);
     g.destroy();
+  }
+
+  // Bigger portrait-style bust used only for the Galo x Cruzeiro reveal
+  // beat, not the walking spritesheet.
+  makeJersey(key, jerseyColor) {
+    const g = this.add.graphics();
+    g.fillStyle(0xd98a8a, 1);
+    g.fillCircle(32, 22, 16); // face
+    g.fillStyle(jerseyColor, 1);
+    g.fillRoundedRect(10, 34, 44, 34, 8);
+    g.lineStyle(2, 0xffffff, 0.6);
+    g.strokeRoundedRect(10, 34, 44, 34, 8);
+    // glasses
+    g.fillStyle(0xffffff, 0.9);
+    g.fillRect(20, 19, 8, 4);
+    g.fillRect(34, 19, 8, 4);
+    if (key === 'bell_galo') {
+      g.fillStyle(0xffffff, 1);
+      g.fillRect(28, 40, 8, 22);
+    }
+    g.generateTexture(key, 64, 68);
+    g.destroy();
+  }
+
+  makeNightFloorTile() {
+    const g = this.add.graphics();
+    g.fillStyle(0x1c1a33, 1);
+    g.fillRect(0, 0, 32, 32);
+    g.lineStyle(1, 0x2b285a, 1);
+    g.strokeRect(0, 0, 32, 32);
+    g.generateTexture('floor_tile_night', 32, 32);
+    g.destroy();
+  }
+
+  makeStar() {
+    const g = this.add.graphics();
+    g.fillStyle(0xf4ece2, 0.9);
+    g.fillCircle(3, 3, 3);
+    g.generateTexture('star', 6, 6);
+    g.destroy();
+  }
+
+  makeLandmarkMarker() {
+    const g = this.add.graphics();
+    g.fillStyle(0xe8c07d, 1);
+    g.fillCircle(12, 12, 11);
+    g.lineStyle(2, 0xffffff, 0.9);
+    g.strokeCircle(12, 12, 11);
+    g.generateTexture('landmark', 24, 24);
+    g.destroy();
+
+    const gDone = this.add.graphics();
+    gDone.fillStyle(0xe86b8a, 1);
+    gDone.fillCircle(12, 12, 11);
+    gDone.lineStyle(2, 0xffffff, 0.9);
+    gDone.strokeCircle(12, 12, 11);
+    gDone.generateTexture('landmark_done', 24, 24);
+    gDone.destroy();
   }
 }
