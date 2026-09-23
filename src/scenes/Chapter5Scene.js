@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import TouchControls from '../ui/TouchControls.js';
 import DialogueBox from '../ui/DialogueBox.js';
-import { faceFromVector, applyWalkAnim } from '../ui/spriteAnim.js';
+import { faceFromVector, applyWalkAnim, ySortDepth } from '../ui/spriteAnim.js';
 import { chapter5Landmarks } from '../data/chapter5Landmarks.js';
 
 const WORLD_W = 900;
@@ -83,6 +83,8 @@ export default class Chapter5Scene extends Phaser.Scene {
       .setDepth(500)
       .setAlpha(0);
 
+    this.navArrow = this.add.image(this.player.x, this.player.y, 'nav_arrow').setDepth(9999);
+
     this.chapterEnded = false;
 
     this.showChapterCard();
@@ -148,6 +150,7 @@ export default class Chapter5Scene extends Phaser.Scene {
     this.handleMovement(input);
     this.updateCompanion();
     this.checkLandmarks();
+    this.updateNavArrow();
   }
 
   handleMovement(input) {
@@ -166,6 +169,7 @@ export default class Chapter5Scene extends Phaser.Scene {
       this.player.facing = faceFromVector(vx, vy, this.player.facing);
     }
     applyWalkAnim(this.player, 'line', this.player.facing, moving);
+    ySortDepth(this.player);
     this.player.setVelocity(vx, vy);
   }
 
@@ -187,6 +191,33 @@ export default class Chapter5Scene extends Phaser.Scene {
     this.companion.y = Phaser.Math.Linear(this.companion.y, targetY, 0.18);
     this.companion.facing = this.player.facing;
     applyWalkAnim(this.companion, 'bell', this.companion.facing, moving);
+    ySortDepth(this.companion);
+  }
+
+  updateNavArrow() {
+    const remaining = this.markers.filter((spot) => !spot.collected);
+    if (remaining.length === 0) {
+      this.navArrow.setVisible(false);
+      return;
+    }
+    let nearest = remaining[0];
+    let nearestDist = Phaser.Math.Distance.Between(this.player.x, this.player.y, nearest.x, nearest.y);
+    remaining.forEach((spot) => {
+      const dist = Phaser.Math.Distance.Between(this.player.x, this.player.y, spot.x, spot.y);
+      if (dist < nearestDist) {
+        nearest = spot;
+        nearestDist = dist;
+      }
+    });
+
+    const angle = Phaser.Math.Angle.Between(this.player.x, this.player.y, nearest.x, nearest.y);
+    const radius = 34;
+    this.navArrow.setVisible(true);
+    this.navArrow.setPosition(
+      this.player.x + Math.cos(angle) * radius,
+      this.player.y + Math.sin(angle) * radius - 6,
+    );
+    this.navArrow.setRotation(angle + Math.PI / 2);
   }
 
   checkLandmarks() {

@@ -51,6 +51,7 @@ export default class BootScene extends Phaser.Scene {
     this.makeNightFloorTile();
     this.makeStar();
     this.makeLandmarkMarker();
+    this.makeNavArrow();
 
     this.scene.start('Title');
   }
@@ -205,5 +206,24 @@ export default class BootScene extends Phaser.Scene {
     gDone.strokeCircle(12, 12, 11);
     gDone.generateTexture('landmark_done', 24, 24);
     gDone.destroy();
+  }
+
+  // Points from the player toward the nearest uncollected landmark (see
+  // Chapter5Scene's nav arrow). Drawn pointing "up" by default; scenes
+  // rotate it to the real bearing with setRotation().
+  makeNavArrow() {
+    const g = this.add.graphics();
+    g.fillStyle(0xe8c07d, 0.95);
+    g.lineStyle(2, 0x1c1420, 0.5);
+    g.beginPath();
+    g.moveTo(11, 0);
+    g.lineTo(22, 18);
+    g.lineTo(11, 13);
+    g.lineTo(0, 18);
+    g.closePath();
+    g.fillPath();
+    g.strokePath();
+    g.generateTexture('nav_arrow', 22, 18);
+    g.destroy();
   }
 }

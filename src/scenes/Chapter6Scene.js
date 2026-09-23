@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import TouchControls from '../ui/TouchControls.js';
 import DialogueBox from '../ui/DialogueBox.js';
-import { faceFromVector, applyWalkAnim } from '../ui/spriteAnim.js';
+import { faceFromVector, applyWalkAnim, ySortDepth } from '../ui/spriteAnim.js';
 import { chapter6Steps } from '../data/chapter6Dialogue.js';
 
 const WORLD_W = 500;
@@ -43,6 +43,7 @@ export default class Chapter6Scene extends Phaser.Scene {
     this.player.facing = 'up';
 
     this.bell = this.physics.add.staticSprite(WORLD_W / 2, 190, 'bell_sheet', 0);
+    this.bell.setDepth(this.bell.y);
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
 
@@ -144,6 +145,7 @@ export default class Chapter6Scene extends Phaser.Scene {
       this.player.facing = faceFromVector(vx, vy, this.player.facing);
     }
     applyWalkAnim(this.player, 'line', this.player.facing, moving);
+    ySortDepth(this.player);
     this.player.setVelocity(vx, vy);
   }
 

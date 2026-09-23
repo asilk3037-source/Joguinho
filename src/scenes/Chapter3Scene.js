@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import TouchControls from '../ui/TouchControls.js';
 import DialogueBox from '../ui/DialogueBox.js';
-import { faceFromVector, applyWalkAnim } from '../ui/spriteAnim.js';
+import { faceFromVector, applyWalkAnim, ySortDepth } from '../ui/spriteAnim.js';
 import { chapter3Steps } from '../data/chapter3Dialogue.js';
 
 const WORLD_W = 720;
@@ -26,7 +26,7 @@ export default class Chapter3Scene extends Phaser.Scene {
       [180, 260], [420, 260], [300, 380], [540, 380],
       [180, 500], [420, 500], [300, 620], [540, 620],
     ];
-    tablePositions.forEach(([x, y]) => this.tables.create(x, y, 'table'));
+    tablePositions.forEach(([x, y]) => this.tables.create(x, y, 'table').setDepth(y));
 
     this.player = this.physics.add.sprite(WORLD_W / 2, WORLD_H - 100, 'line_sheet', 0);
     this.player.setSize(24, 16).setOffset(20, 44);
@@ -34,6 +34,7 @@ export default class Chapter3Scene extends Phaser.Scene {
     this.player.facing = 'down';
 
     this.bell = this.physics.add.staticSprite(WORLD_W / 2, 190, 'bell_sheet', 0);
+    this.bell.setDepth(this.bell.y);
 
     this.physics.add.collider(this.player, this.tables);
 
@@ -133,6 +134,7 @@ export default class Chapter3Scene extends Phaser.Scene {
       this.player.facing = faceFromVector(vx, vy, this.player.facing);
     }
     applyWalkAnim(this.player, 'line', this.player.facing, moving);
+    ySortDepth(this.player);
 
     this.player.setVelocity(vx, vy);
   }

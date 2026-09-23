@@ -18,4 +18,13 @@ export function applyWalkAnim(sprite, key, facing, moving) {
   }
 }
 
+// Standard top-down trick: whoever is lower on screen (bigger y) is
+// physically closer to the camera, so they draw on top. Without this two
+// characters visually swap which one is "in front" depending on draw
+// order instead of position, which reads as them walking through each
+// other whenever their paths cross.
+export function ySortDepth(sprite) {
+  sprite.setDepth(sprite.y);
+}
+
 export { IDLE_FRAMES };
