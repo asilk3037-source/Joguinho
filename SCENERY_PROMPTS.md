@@ -26,6 +26,13 @@ resolução alta (quanto maior, melhor — eu redimensiono do meu lado).
 
 ---
 
+## ✅ Já resolvidos com a arte que você mandou
+
+- **Capítulo 3 — Minas Shopping** (praça de alimentação): cenário real, no jogo.
+- **Capítulo 3 — o túnel do primeiro beijo**: o fundo "tunnel" que veio junto
+  virou o túnel de depois do shopping/playground, onde rolou o primeiro
+  beijo de vocês — não é mais a Sapucaí (isso mudou de capítulo).
+
 ## Prioridade alta — já são jogáveis, ganham mais com cenário de verdade
 
 ### 1. Capítulo 5 — "A cidade toda, a pé" (mapa de Belo Horizonte)
@@ -44,17 +51,24 @@ e cafés numa área mais movimentada. Luz de fim de tarde, tons quentes
 de laranja e dourado no céu.
 ```
 
-### 2. Capítulo 3 — "Minas Shopping" (praça de alimentação)
+### 2. Capítulo 3 — o playground (parada entre o shopping e o túnel)
+Onde rola a cena do soco no totem de força. Hoje é só um placeholder bem
+simples (grama + céu). A arte do totem/soco em si já está pronta (veio no
+laboratório de animações), só falta o cenário ao redor.
+
 ```
-Interior de uma praça de alimentação de shopping center visto de cima em
-perspectiva 3/4. Mesas redondas e quadradas espalhadas, cadeiras coloridas,
-alguns balcões de fast-food genéricos ao fundo (sem logos de marcas reais),
-piso xadrez claro, luminárias penduradas, plantas decorativas nos cantos,
-um letreiro luminoso ao fundo. Ambiente iluminado, clima aconchegante de
-shopping à noite.
+Um playground/parquinho ao ar livre visto de cima em perspectiva 3/4, com
+piso emborrachado colorido, um balanço e um escorregador ao fundo, grama
+e árvores nas bordas, bancos de madeira, luz de fim de tarde dourada.
+Ambiente aconchegante, sem pessoas nem equipamentos de exercício (o totem
+de força já é uma arte separada que eu encaixo por cima).
 ```
 
 ### 3. Capítulo 6 — "Sapucaí" (viaduto à noite)
+Esse ainda está com placeholder (piso escuro + estrelinhas) — o fundo real
+do túnel que veio junto foi usado no primeiro beijo (capítulo 3), então a
+Sapucaí de verdade ainda precisa da arte dela.
+
 ```
 Um viaduto urbano à noite visto de cima em perspectiva 3/4, com luzes da
 cidade cintilando ao fundo embaixo dele, céu escuro azul-arroxeado cheio de

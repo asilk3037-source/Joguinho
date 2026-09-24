@@ -5,12 +5,10 @@ import ChipHud from '../ui/ChipHud.js';
 import { faceFromVector, applyWalkAnim, ySortDepth } from '../ui/spriteAnim.js';
 import { chapter6Steps } from '../data/chapter6Dialogue.js';
 
-const WORLD_W = 720;
-const WORLD_H = 1280;
+const WORLD_W = 500;
+const WORLD_H = 800;
 const PLAYER_SPEED = 150;
 const INTERACT_RANGE = 60;
-const MEET_X = 360;
-const MEET_Y = 420;
 
 export default class Chapter6Scene extends Phaser.Scene {
   constructor() {
@@ -21,21 +19,31 @@ export default class Chapter6Scene extends Phaser.Scene {
     this.physics.world.setBounds(0, 0, WORLD_W, WORLD_H);
     this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H);
 
-    this.add.image(0, 0, 'tunnel_bg').setOrigin(0, 0);
+    this.add.tileSprite(0, 0, WORLD_W, WORLD_H, 'floor_tile_night').setOrigin(0, 0);
+
+    for (let i = 0; i < 40; i += 1) {
+      const star = this.add.image(
+        Phaser.Math.Between(0, WORLD_W),
+        Phaser.Math.Between(0, WORLD_H * 0.55),
+        'star',
+      );
+      this.tweens.add({
+        targets: star,
+        alpha: { from: 0.2, to: 0.9 },
+        duration: Phaser.Math.Between(900, 2200),
+        yoyo: true,
+        repeat: -1,
+        delay: Phaser.Math.Between(0, 1500),
+      });
+    }
 
     this.player = this.physics.add.sprite(WORLD_W / 2, WORLD_H - 90, 'line_walk4', 0);
     this.player.setSize(28, 18).setOffset(22, 48);
     this.player.setCollideWorldBounds(true);
     this.player.facing = 'up';
 
-    this.bell = this.physics.add.staticSprite(MEET_X, MEET_Y, 'bell_walk4', 0);
+    this.bell = this.physics.add.staticSprite(WORLD_W / 2, 190, 'bell_walk4', 0);
     this.bell.setDepth(this.bell.y);
-
-    this.kissSprite = this.add
-      .sprite(MEET_X, MEET_Y - 20, 'kiss8', 0)
-      .setDisplaySize(260, 346)
-      .setVisible(false)
-      .setDepth(MEET_Y + 1);
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
 
@@ -44,7 +52,7 @@ export default class Chapter6Scene extends Phaser.Scene {
     this.hud = new ChipHud(this, 'Sapucaí', '♥ 19/05/2024');
 
     this.interactHint = this.add
-      .text(this.bell.x, this.bell.y - 46, 'toque A pra chegar perto da Bell', {
+      .text(this.bell.x, this.bell.y - 40, 'toque A pra chegar perto da Bell', {
         fontFamily: 'sans-serif',
         fontSize: '11px',
         color: '#1c1420',
@@ -106,7 +114,7 @@ export default class Chapter6Scene extends Phaser.Scene {
       if (input.action) this.dialogue.advance();
       if (!this.dialogue.isActive()) {
         this.controls.setMovementEnabled(true);
-        this.playKissAndFinish();
+        this.finishChapter();
       }
       return;
     }
@@ -142,17 +150,9 @@ export default class Chapter6Scene extends Phaser.Scene {
     this.player.setVelocity(vx, vy);
   }
 
-  // The romantic capstone of "day one": the embrace plays once, then we
-  // hold on the last frame for a beat before moving on.
-  playKissAndFinish() {
+  finishChapter() {
     this.chapterEnded = true;
     this.player.setVelocity(0, 0);
-    this.controls.setVisible(false);
-    this.player.setVisible(false);
-    this.bell.setVisible(false);
-    this.kissSprite.setVisible(true).play('kiss_play');
-    this.kissSprite.once('animationcomplete', () => {
-      this.time.delayedCall(1200, () => this.scene.start('EndOfPrototype'));
-    });
+    this.scene.start('EndOfPrototype');
   }
 }

@@ -48,6 +48,19 @@ export default class BootScene extends Phaser.Scene {
       frameWidth: 150,
       frameHeight: 200,
     });
+
+    // The playground stop between the food court and the tunnel: Line
+    // takes a swing at a strength-tester punch machine (16 frames,
+    // machine included in the art) and Bell cracks up watching (16
+    // frames, solo).
+    this.load.spritesheet('punch16', 'assets/animations/punch_strip.png', {
+      frameWidth: 140,
+      frameHeight: 140,
+    });
+    this.load.spritesheet('laugh16', 'assets/animations/laugh_strip.png', {
+      frameWidth: 130,
+      frameHeight: 160,
+    });
   }
 
   create() {
@@ -66,8 +79,22 @@ export default class BootScene extends Phaser.Scene {
       frameRate: 6,
       repeat: 0,
     });
+    this.anims.create({
+      key: 'punch_play',
+      frames: this.anims.generateFrameNumbers('punch16', { start: 0, end: 15 }),
+      frameRate: 14,
+      repeat: 0,
+    });
+    this.anims.create({
+      key: 'laugh_loop',
+      frames: this.anims.generateFrameNumbers('laugh16', { start: 0, end: 15 }),
+      frameRate: 10,
+      repeat: -1,
+    });
 
     this.makeFloorTile();
+    this.makeNightFloorTile();
+    this.makePlaygroundBg();
     this.makeDirButton('dpad_up', 'up');
     this.makeDirButton('dpad_down', 'down');
     this.makeDirButton('dpad_left', 'left');
@@ -184,6 +211,42 @@ export default class BootScene extends Phaser.Scene {
       g.fillRect(28, 40, 8, 22);
     }
     g.generateTexture(key, 64, 68);
+    g.destroy();
+  }
+
+  makeNightFloorTile() {
+    const g = this.add.graphics();
+    g.fillStyle(0x1c1a33, 1);
+    g.fillRect(0, 0, 32, 32);
+    g.lineStyle(1, 0x2b285a, 1);
+    g.strokeRect(0, 0, 32, 32);
+    g.generateTexture('floor_tile_night', 32, 32);
+    g.destroy();
+  }
+
+  // Stand-in scenery for the playground stop until real art arrives (see
+  // SCENERY_PROMPTS.md) — the punch machine itself is baked into the
+  // punch16 sprite, so this only needs to read as "a park at golden hour".
+  makePlaygroundBg() {
+    const w = 720;
+    const h = 1280;
+    const g = this.add.graphics();
+    g.fillStyle(0xf6c9a0, 1);
+    g.fillRect(0, 0, w, h * 0.3);
+    g.fillStyle(0x8fbf7a, 1);
+    g.fillRect(0, h * 0.3, w, h * 0.7);
+    g.fillStyle(0xdec98f, 1);
+    g.fillEllipse(w / 2, h * 0.62, w * 0.5, h * 0.5);
+    const bushColor = 0x6fa25c;
+    const bushSpots = [
+      [70, 220], [650, 260], [90, 520], [630, 560], [60, 900], [660, 940],
+    ];
+    bushSpots.forEach(([x, y]) => {
+      g.fillStyle(bushColor, 1);
+      g.fillCircle(x, y, 46);
+      g.fillCircle(x + 34, y + 10, 34);
+    });
+    g.generateTexture('playground_bg', w, h);
     g.destroy();
   }
 
