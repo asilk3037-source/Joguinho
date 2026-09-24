@@ -3,6 +3,7 @@ import TouchControls from '../ui/TouchControls.js';
 import DialogueBox from '../ui/DialogueBox.js';
 import { faceFromVector, applyWalkAnim, ySortDepth } from '../ui/spriteAnim.js';
 import { chapter5Landmarks } from '../data/chapter5Landmarks.js';
+import ChipHud from '../ui/ChipHud.js';
 
 const WORLD_W = 900;
 const WORLD_H = 1400;
@@ -22,12 +23,12 @@ export default class Chapter5Scene extends Phaser.Scene {
 
     this.add.tileSprite(0, 0, WORLD_W, WORLD_H, 'floor_tile').setOrigin(0, 0);
 
-    this.player = this.physics.add.sprite(WORLD_W / 2, WORLD_H - 80, 'line_sheet', 0);
-    this.player.setSize(24, 16).setOffset(20, 44);
+    this.player = this.physics.add.sprite(WORLD_W / 2, WORLD_H - 80, 'line_walk4', 0);
+    this.player.setSize(28, 18).setOffset(22, 48);
     this.player.setCollideWorldBounds(true);
     this.player.facing = 'down';
 
-    this.companion = this.add.sprite(this.player.x, this.player.y + COMPANION_OFFSET, 'bell_sheet', 0);
+    this.companion = this.add.sprite(this.player.x, this.player.y + COMPANION_OFFSET, 'bell_walk4', 0);
     this.companion.facing = 'down';
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
@@ -56,9 +57,11 @@ export default class Chapter5Scene extends Phaser.Scene {
       return { ...spot, marker, label, collected: false };
     });
 
+    this.hud = new ChipHud(this, 'Belo Horizonte', '19/05/2024');
+
     this.collectedCount = 0;
     this.progressText = this.add
-      .text(16, 14, `0/${this.markers.length} lugares`, {
+      .text(16, 54, `0/${this.markers.length} lugares`, {
         fontFamily: 'sans-serif',
         fontSize: '13px',
         color: '#1c1420',

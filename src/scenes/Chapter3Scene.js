@@ -1,13 +1,16 @@
 import Phaser from 'phaser';
 import TouchControls from '../ui/TouchControls.js';
 import DialogueBox from '../ui/DialogueBox.js';
+import ChipHud from '../ui/ChipHud.js';
 import { faceFromVector, applyWalkAnim, ySortDepth } from '../ui/spriteAnim.js';
 import { chapter3Steps } from '../data/chapter3Dialogue.js';
 
 const WORLD_W = 720;
-const WORLD_H = 1100;
+const WORLD_H = 1280;
 const PLAYER_SPEED = 150;
-const INTERACT_RANGE = 46;
+const INTERACT_RANGE = 60;
+const TABLE_X = 360;
+const TABLE_Y = 700;
 
 export default class Chapter3Scene extends Phaser.Scene {
   constructor() {
@@ -15,36 +18,33 @@ export default class Chapter3Scene extends Phaser.Scene {
   }
 
   create() {
-    this.cameras.main.setBackgroundColor('#f1e6c8');
     this.physics.world.setBounds(0, 0, WORLD_W, WORLD_H);
     this.cameras.main.setBounds(0, 0, WORLD_W, WORLD_H);
 
-    this.add.tileSprite(0, 0, WORLD_W, WORLD_H, 'floor_tile').setOrigin(0, 0);
+    this.add.image(0, 0, 'mall_bg').setOrigin(0, 0);
 
-    this.tables = this.physics.add.staticGroup();
-    const tablePositions = [
-      [180, 260], [420, 260], [300, 380], [540, 380],
-      [180, 500], [420, 500], [300, 620], [540, 620],
-    ];
-    tablePositions.forEach(([x, y]) => this.tables.create(x, y, 'table').setDepth(y));
-
-    this.player = this.physics.add.sprite(WORLD_W / 2, WORLD_H - 100, 'line_sheet', 0);
-    this.player.setSize(24, 16).setOffset(20, 44);
+    this.player = this.physics.add.sprite(WORLD_W / 2, WORLD_H - 90, 'line_walk4', 0);
+    this.player.setSize(28, 18).setOffset(22, 48);
     this.player.setCollideWorldBounds(true);
     this.player.facing = 'down';
 
-    this.bell = this.physics.add.staticSprite(WORLD_W / 2, 190, 'bell_sheet', 0);
+    this.bell = this.physics.add.staticSprite(TABLE_X, TABLE_Y - 60, 'bell_walk4', 0);
     this.bell.setDepth(this.bell.y);
 
-    this.physics.add.collider(this.player, this.tables);
+    this.eatSprite = this.add
+      .sprite(TABLE_X, TABLE_Y, 'eat36', 0)
+      .setDisplaySize(300, 300)
+      .setVisible(false)
+      .setDepth(TABLE_Y + 1);
 
     this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
 
     this.controls = new TouchControls(this);
     this.dialogue = new DialogueBox(this);
+    this.hud = new ChipHud(this, 'Minas Shopping', '♥ 09/05/2024');
 
     this.interactHint = this.add
-      .text(this.bell.x, this.bell.y - 40, 'toque A para falar com a Bell', {
+      .text(this.bell.x, this.bell.y - 46, 'toque A para falar com a Bell', {
         fontFamily: 'sans-serif',
         fontSize: '11px',
         color: '#1c1420',
@@ -111,6 +111,7 @@ export default class Chapter3Scene extends Phaser.Scene {
 
     if (input.action && nearBell) {
       this.controls.setMovementEnabled(false);
+      this.startEatingScene();
       this.dialogue.open(chapter3Steps);
       return;
     }
@@ -137,6 +138,14 @@ export default class Chapter3Scene extends Phaser.Scene {
     ySortDepth(this.player);
 
     this.player.setVelocity(vx, vy);
+  }
+
+  // They sit down and eat together for the rest of the conversation — a
+  // nod to the "BK" joke and the real food-court setting.
+  startEatingScene() {
+    this.player.setVisible(false);
+    this.bell.setVisible(false);
+    this.eatSprite.setVisible(true).play('eat_loop');
   }
 
   onDialogueComplete() {

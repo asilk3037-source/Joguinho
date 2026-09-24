@@ -25,8 +25,8 @@ export default class Chapter4Scene extends DialogueChapterScene {
 
   onBackgroundCreate() {
     const { width, height } = this.scale;
-    this.add.sprite(width * 0.3, height * 0.24, 'line_sheet', 0).setScale(1.5);
-    this.add.sprite(width * 0.7, height * 0.24, 'bell_sheet', 0).setScale(1.5);
+    this.add.sprite(width * 0.3, height * 0.24, 'line_walk4', 0).setScale(1.2);
+    this.add.sprite(width * 0.7, height * 0.24, 'bell_walk4', 0).setScale(1.2);
 
     this.heartTimer = this.time.addEvent({
       delay: 450,

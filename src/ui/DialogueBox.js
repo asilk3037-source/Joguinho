@@ -1,9 +1,17 @@
 import Phaser from 'phaser';
 
+const PALETTE = {
+  cream: 0xfff8ed,
+  border: 0x6f4b67,
+  shadow: 0x38263f,
+  speaker: 0xb44f69,
+  text: 0x3a2940,
+};
+
 const SPEAKER_META = {
-  line: { name: 'Line', color: 0x2b2b3d, portraitTexture: 'line_portraits' },
-  bell: { name: 'Bell', color: 0xd98a8a, portraitTexture: 'bell_portraits' },
-  narrator: { name: '', color: 0x4a3f47, portraitTexture: null },
+  line: { name: 'Line', portraitTexture: 'line_portraits' },
+  bell: { name: 'Bell', portraitTexture: 'bell_portraits' },
+  narrator: { name: '', portraitTexture: null },
 };
 
 // Frame order in both line_portraits.png and bell_portraits.png (same 3x2
@@ -12,7 +20,9 @@ const EXPRESSION_FRAMES = { neutral: 0, smile: 1, laugh: 2, surprised: 3, blush:
 
 // Bottom dialogue box: speaker portrait + name + text, advanced by tapping
 // the action button. Steps of type "choice" pause and wait for one of the
-// option buttons instead.
+// option buttons instead. Cream/plum "sticker" look matching the
+// reference mockup, with a hard drop-shadow behind the box and a bobbing
+// "A ›" next indicator.
 //
 // Deliberately NOT using a Phaser Container: interactive children of a
 // scrollFactor(0) container don't hit-test correctly once the camera has
@@ -24,60 +34,76 @@ export default class DialogueBox {
     this.scene = scene;
     const { width, height } = scene.scale;
     const depth = 900;
-    const boxHeight = 150;
+    const boxHeight = 158;
     const boxY = height - boxHeight;
+    this.boxY = boxY;
+    this.boxHeight = boxHeight;
 
     const bg = scene.add.graphics().setScrollFactor(0).setDepth(depth);
-    bg.fillStyle(0x1c1420, 0.94);
-    bg.fillRoundedRect(10, boxY, width - 20, boxHeight - 10, 10);
-    bg.lineStyle(2, 0xe8c07d, 0.8);
-    bg.strokeRoundedRect(10, boxY, width - 20, boxHeight - 10, 10);
+    bg.fillStyle(PALETTE.shadow, 1);
+    bg.fillRoundedRect(10, boxY + 6, width - 20, boxHeight - 10, 16);
+    bg.fillStyle(PALETTE.cream, 1);
+    bg.fillRoundedRect(10, boxY, width - 20, boxHeight - 10, 16);
+    bg.lineStyle(4, PALETTE.border, 1);
+    bg.strokeRoundedRect(10, boxY, width - 20, boxHeight - 10, 16);
     this.bg = bg;
 
+    const portraitX = 64;
+    const portraitY = boxY + boxHeight - 62;
     this.portrait = scene.add
-      .circle(46, boxY + 34, 22, 0x2b2b3d)
+      .circle(portraitX, portraitY, 46, 0xffffff)
+      .setStrokeStyle(3, PALETTE.border)
       .setScrollFactor(0)
       .setDepth(depth);
     this.portraitImage = scene.add
-      .image(46, boxY + 34, 'line_portraits', 0)
-      .setDisplaySize(40, 40)
+      .image(portraitX, portraitY, 'line_portraits', 0)
+      .setDisplaySize(80, 80)
       .setScrollFactor(0)
       .setDepth(depth + 1)
       .setVisible(false);
     this.nameText = scene.add
-      .text(78, boxY + 16, '', {
+      .text(128, boxY + 18, '', {
         fontFamily: 'sans-serif',
-        fontSize: '13px',
-        color: '#e8c07d',
+        fontSize: '14px',
+        color: '#b44f69',
         fontStyle: 'bold',
       })
       .setScrollFactor(0)
-      .setDepth(depth);
+      .setDepth(depth + 1);
     this.bodyText = scene.add
-      .text(78, boxY + 36, '', {
+      .text(128, boxY + 40, '', {
         fontFamily: 'sans-serif',
         fontSize: '14px',
-        color: '#f4ece2',
-        wordWrap: { width: width - 100 },
-        lineSpacing: 4,
+        color: '#3a2940',
+        wordWrap: { width: width - 150 },
+        lineSpacing: 5,
       })
       .setScrollFactor(0)
-      .setDepth(depth);
+      .setDepth(depth + 1);
     this.hintText = scene.add
-      .text(width - 24, height - 22, 'toque A', {
+      .text(width - 26, height - 24, 'A ›', {
         fontFamily: 'sans-serif',
-        fontSize: '10px',
-        color: '#8a7b86',
+        fontSize: '13px',
+        color: '#b44f69',
+        fontStyle: 'bold',
       })
       .setOrigin(1, 0.5)
       .setScrollFactor(0)
-      .setDepth(depth);
+      .setDepth(depth + 1);
+    this.hintBaseY = this.hintText.y;
+    scene.tweens.add({
+      targets: this.hintText,
+      y: this.hintBaseY + 4,
+      duration: 400,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
 
     this.pieces = [this.bg, this.portrait, this.portraitImage, this.nameText, this.bodyText, this.hintText];
     this.setPiecesVisible(false);
 
     this.choiceButtons = [];
-    this.boxY = boxY;
 
     this.steps = [];
     this.index = -1;
@@ -120,7 +146,7 @@ export default class DialogueBox {
       const meta = SPEAKER_META.narrator;
       this.applySpeaker(meta);
       this.bodyText.setText(step.text);
-      this.hintText.setText('');
+      this.hintText.setVisible(false);
       this.showChoices(step.options);
       return;
     }
@@ -128,33 +154,35 @@ export default class DialogueBox {
     const meta = SPEAKER_META[step.speaker] || SPEAKER_META.narrator;
     this.applySpeaker(meta, step.expression);
     this.bodyText.setText(step.text);
-    this.hintText.setText('toque A');
+    this.hintText.setVisible(true);
   }
 
   applySpeaker(meta, expression) {
-    this.portrait.setFillStyle(meta.color);
     this.nameText.setText(meta.name);
 
     if (meta.portraitTexture) {
       const frame = EXPRESSION_FRAMES[expression] ?? EXPRESSION_FRAMES.neutral;
       this.portraitImage.setTexture(meta.portraitTexture, frame).setVisible(true);
+      this.portrait.setVisible(true);
     } else {
       this.portraitImage.setVisible(false);
+      this.portrait.setVisible(false);
     }
   }
 
   showChoices(options) {
     this.waitingForChoice = true;
-    const startX = 78;
-    const gapY = 22;
+    const startX = 128;
+    const gapY = 24;
 
     options.forEach((opt, i) => {
-      const y = this.boxY + 68 + i * gapY;
+      const y = this.boxY + 70 + i * gapY;
       const label = this.scene.add
         .text(startX, y, `▸ ${opt.label}`, {
           fontFamily: 'sans-serif',
-          fontSize: '13px',
-          color: '#e8c07d',
+          fontSize: '14px',
+          color: '#b44f69',
+          fontStyle: 'bold',
         })
         .setScrollFactor(0)
         .setDepth(901)
@@ -171,7 +199,7 @@ export default class DialogueBox {
     const meta = SPEAKER_META[option.speaker || 'bell'];
     this.applySpeaker(meta, option.expression);
     this.bodyText.setText(option.reply);
-    this.hintText.setText('toque A');
+    this.hintText.setVisible(true);
   }
 
   clearChoices() {

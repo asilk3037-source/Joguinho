@@ -10,13 +10,14 @@ export default class BootScene extends Phaser.Scene {
   }
 
   preload() {
-    // Real character walk cycles: 4x4 grid, 64x64 per frame.
-    // Row order (frame index): 0-3 down, 4-7 right, 8-11 left, 12-15 up.
-    this.load.spritesheet('line_sheet', 'assets/characters/line_walk.png', {
-      frameWidth: 64,
-      frameHeight: 64,
+    // Real character walk cycles: 4 rows (down/left/right/up) x 24 frames,
+    // a much smoother cycle than the first pass. Line's cell is 72x72,
+    // Bell's is 64x64 — different source art, same grid shape.
+    this.load.spritesheet('line_walk4', 'assets/animations/line_walk4.png', {
+      frameWidth: 72,
+      frameHeight: 72,
     });
-    this.load.spritesheet('bell_sheet', 'assets/characters/bell_walk.png', {
+    this.load.spritesheet('bell_walk4', 'assets/animations/bell_walk4.png', {
       frameWidth: 64,
       frameHeight: 64,
     });
@@ -32,14 +33,41 @@ export default class BootScene extends Phaser.Scene {
       frameWidth: 128,
       frameHeight: 128,
     });
+
+    // Real scenery backgrounds.
+    this.load.image('mall_bg', 'assets/backgrounds/mall.png');
+    this.load.image('tunnel_bg', 'assets/backgrounds/tunnel.png');
+
+    // Real action clips: both sitting eating (36 frames, 6x6 grid) and the
+    // Sapucaí embrace (8 frames in a row).
+    this.load.spritesheet('eat36', 'assets/animations/eat36.png', {
+      frameWidth: 160,
+      frameHeight: 160,
+    });
+    this.load.spritesheet('kiss8', 'assets/animations/kiss8.png', {
+      frameWidth: 150,
+      frameHeight: 200,
+    });
   }
 
   create() {
-    this.createWalkAnims('line');
-    this.createWalkAnims('bell');
+    this.createWalkAnims4('line', 24);
+    this.createWalkAnims4('bell', 24);
+
+    this.anims.create({
+      key: 'eat_loop',
+      frames: this.anims.generateFrameNumbers('eat36', { start: 0, end: 35 }),
+      frameRate: 10,
+      repeat: -1,
+    });
+    this.anims.create({
+      key: 'kiss_play',
+      frames: this.anims.generateFrameNumbers('kiss8', { start: 0, end: 7 }),
+      frameRate: 6,
+      repeat: 0,
+    });
 
     this.makeFloorTile();
-    this.makeTable();
     this.makeDirButton('dpad_up', 'up');
     this.makeDirButton('dpad_down', 'down');
     this.makeDirButton('dpad_left', 'left');
@@ -48,7 +76,6 @@ export default class BootScene extends Phaser.Scene {
     this.makeHeart();
     this.makeJersey('bell_cruzeiro', 0x1a4fa0);
     this.makeJersey('bell_galo', 0x161616);
-    this.makeNightFloorTile();
     this.makeStar();
     this.makeLandmarkMarker();
     this.makeNavArrow();
@@ -56,20 +83,18 @@ export default class BootScene extends Phaser.Scene {
     this.scene.start('Title');
   }
 
-  // Frame ranges follow the fixed 4x4 grid described in preload() above.
-  createWalkAnims(key) {
-    const sheet = `${key}_sheet`;
-    const dirs = {
-      down: [0, 1, 2, 3],
-      right: [4, 5, 6, 7],
-      left: [8, 9, 10, 11],
-      up: [12, 13, 14, 15],
-    };
-    Object.entries(dirs).forEach(([dir, frames]) => {
+  // Row order in both line_walk4.png and bell_walk4.png: 0 down, 1 left,
+  // 2 right, 3 up — each row is `framesPerDir` frames of that walk cycle.
+  createWalkAnims4(key, framesPerDir) {
+    const sheet = `${key}_walk4`;
+    const dirs = ['down', 'left', 'right', 'up'];
+    dirs.forEach((dir, row) => {
+      const start = row * framesPerDir;
+      const end = start + framesPerDir - 1;
       this.anims.create({
         key: `${key}_walk_${dir}`,
-        frames: this.anims.generateFrameNumbers(sheet, { frames }),
-        frameRate: 8,
+        frames: this.anims.generateFrameNumbers(sheet, { start, end }),
+        frameRate: 18,
         repeat: -1,
       });
     });
@@ -82,16 +107,6 @@ export default class BootScene extends Phaser.Scene {
     g.lineStyle(1, 0xdccfa4, 1);
     g.strokeRect(0, 0, 32, 32);
     g.generateTexture('floor_tile', 32, 32);
-    g.destroy();
-  }
-
-  makeTable() {
-    const g = this.add.graphics();
-    g.fillStyle(0x8b5e3c, 1);
-    g.fillRoundedRect(0, 0, 32, 32, 4);
-    g.lineStyle(2, 0x5c3b22, 1);
-    g.strokeRoundedRect(0, 0, 32, 32, 4);
-    g.generateTexture('table', 32, 32);
     g.destroy();
   }
 
@@ -169,16 +184,6 @@ export default class BootScene extends Phaser.Scene {
       g.fillRect(28, 40, 8, 22);
     }
     g.generateTexture(key, 64, 68);
-    g.destroy();
-  }
-
-  makeNightFloorTile() {
-    const g = this.add.graphics();
-    g.fillStyle(0x1c1a33, 1);
-    g.fillRect(0, 0, 32, 32);
-    g.lineStyle(1, 0x2b285a, 1);
-    g.strokeRect(0, 0, 32, 32);
-    g.generateTexture('floor_tile_night', 32, 32);
     g.destroy();
   }
 

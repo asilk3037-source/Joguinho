@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import DialogueChapterScene from './DialogueChapterScene.js';
+import { idleFrame } from '../ui/spriteAnim.js';
 
 const prologueSteps = [
   { speaker: 'narrator', text: 'O Happn mostra quem cruza o seu caminho.' },
@@ -34,8 +35,16 @@ export default class PrologueScene extends DialogueChapterScene {
     const laneY1 = height * 0.32;
     const laneY2 = height * 0.4;
 
-    this.line = this.add.sprite(-30, laneY1, 'line_sheet', 4).setScale(0.9).setAlpha(0.55).setTint(0x171225);
-    this.bellSil = this.add.sprite(width + 30, laneY2, 'bell_sheet', 8).setScale(0.9).setAlpha(0.55).setTint(0x171225);
+    this.line = this.add
+      .sprite(-30, laneY1, 'line_walk4', idleFrame('right'))
+      .setScale(0.7)
+      .setAlpha(0.55)
+      .setTint(0x171225);
+    this.bellSil = this.add
+      .sprite(width + 30, laneY2, 'bell_walk4', idleFrame('left'))
+      .setScale(0.7)
+      .setAlpha(0.55)
+      .setTint(0x171225);
     this.line.play('line_walk_right');
     this.bellSil.play('bell_walk_left');
 
